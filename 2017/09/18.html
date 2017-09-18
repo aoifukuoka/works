@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+    <script src="../processing.js"></script>
+    <script>
+      window.addEventListener("load", init);
+      function init() {
+        var stage = new createjs.Stage("myCanvas");
+        var noise = new Processing().noise
+        var _time = 0.0;
+
+        function Point(x, y) {
+          this.x = x;
+          this.y = y;
+          this._vx = 0;
+          this._vy = 0;
+        }
+
+        var start = new Point(100, 300);
+        var end = new Point(700, 300);
+        var pointNum = 5;
+
+        var points = [];
+        var _point;
+        var point_size = 1;
+        var _point_head;
+        _point_head = new Point(960, 270);
+
+        var shape = new createjs.Shape();
+        shape.graphics.setStrokeStyle(10).beginStroke("hsl(" + hue * 4 + ", 100%, 50%)");
+        stage.addChild(shape);
+
+        function draw() {
+          shape.graphics.clear();
+          shape.graphics.setStrokeStyle(1).beginStroke("hsl(" + hue * 4 + ", 100%, 50%)");
+          var angle = 0.0;
+          for (var i = 0; i < points.length; i++) {
+            if (i >= 2) {
+              var size = Math.sin( angle ) * 30;
+              shape.graphics.setStrokeStyle(size).beginStroke("hsl(" + hue * 4 + ", 100%, 50%)");
+              var p0x = points[i - 2].x;
+              var p0y = points[i - 2].y;
+              var p1x = points[i - 1].x;
+              var p1y = points[i - 1].y;
+              var p2x = points[i].x;
+              var p2y = points[i].y;
+
+              var curveStartX = (p0x + p1x) / 2;
+              var curveStartY = (p0y + p1y) / 2;
+              var curveEndX = (p1x + p2x) / 2;
+              var curveEndY = (p1y + p2y) / 2;
+
+              shape.graphics.moveTo(curveStartX, curveStartY).curveTo(p1x, p1y, curveEndX, curveEndY);
+              angle += 0.1;
+            }
+          }
+          shape.graphics.endStroke();
+        }
+
+        function createPoint() {        
+            var i;
+            var _rand_rate = 5.0;
+            var _point_num = 50;
+
+            _point = new Point(_point_head.x, _point_head.y);
+            _point._vx = ( Math.random()) * _rand_rate;
+            _point._vy = ( Math.random()) * _rand_rate;
+            points.push(_point);
+            
+            for (i = 0; i < points.length; i++){
+                if ( points.length > _point_num ) {
+                    _point = points.shift();
+                    
+                    break;
+                }
+            }
+        }
+
+        function setPointHead() {
+            var vx = ( stage.mouseX - _point_head.x ) / 10;
+            var vy = ( stage.mouseY - _point_head.y ) / 10;
+            _point_head.x += vx;
+            _point_head.y += vy;
+        }
+
+        function follow() {
+          var i;
+          var dy, ay;
+          
+          for (i = points.length - 1; i > 0; i-- ) {        
+              dy = points[i].y - points[i - 1].y;
+              ay = dy * 0.03;
+              points[i]._vy += ay;
+          }
+        }
+        var _gravity_xvec = 1;
+        var _gravity_yvec = 1;
+        var _rand_rate;
+        var _friction = 0.8;
+        var _gravity_x = 10.0;
+        var _gravity_y =  10.0;
+        function move() {
+          var i;
+          var mx_vec = 0;
+          var mousex = stage.mouseX;
+          var mousey = stage.mouseY;
+
+          var _center_x = 480;
+          var _center_y = 270;
+          
+          var x_rate = Math.abs(mousex - _center_x) / _center_x;
+          var y_rate = Math.abs(mousey - _center_y) / _center_y;
+          
+          for (i = 0; i < points.length; i++ ) {
+              
+              if ( mousex < _center_x) {
+                  _gravity_xvec = 1;
+              }else {
+                  _gravity_xvec = -1;
+              }
+              
+              if (stage.mouseY < _center_y) {
+                  _gravity_yvec = 1;
+              }else {
+                  _gravity_yvec = -1;
+              }
+              
+              points[i]._vx += _gravity_x * x_rate * _gravity_xvec;
+              points[i]._vx *= _friction;
+              points[i]._vy += _gravity_y * y_rate * _gravity_yvec;
+              points[i]._vy *= _friction;
+              
+              points[i].x += points[i]._vx;
+              points[i].y += points[i]._vy;
+          }
+      }
+
+      var hue = 0.0;
+      createjs.Ticker.addEventListener("tick", tick);
+      function tick() {
+        _time += 0.02;
+        hue += 1;
+        
+        setPointHead();
+        createPoint();
+        draw();
+        move();
+        follow();
+        stage.update();
+      }
+    }
+    </script>
+  </head>
+  <body>
+   <canvas id="myCanvas" width="940" height="940" style="background:black;"></canvas>
+  </body>
+</html>
