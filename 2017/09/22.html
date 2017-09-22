@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+    <script>
+      var _cell_list = [];
+      var _kyu_def_posi = [];
+      
+      window.addEventListener("load", init);
+      function init() {
+        var stage = new createjs.Stage("myCanvas");
+        
+        var _t = 1;
+        var _cell_amout = 1;
+        var _a_min = 0.0;
+        var _f = 3.0;
+        var _nami_spring = 0.01;
+        var _nami_friction = 0.8;
+        var _mouse_area = 20.0;
+        var _cell_cnt = 100;
+
+        var _up_rate = 3.0;
+        function setCell() {
+        var _cell_cnt = 100;
+        var _cell_w = 1;
+        var _cell_h = 1;
+        var _nami_color = "white";
+        var _cell_amout = 1;
+        var _center_y = stage.canvas.height / 2;
+        var _center_x = stage.canvas.width / 2;
+        var angle;
+        var x;
+        var y;
+        var dx;
+        var dy;
+        var _kyu_radius = 100;
+        var rotation;
+        for (var i = 0; i < _cell_cnt; i++ ) {
+            var cell = new Cell(i * _cell_amout, _center_y, _cell_w, _cell_h);
+            console.log(i * _cell_amout);
+            console.log(_center_y);
+            
+            angle = Math.PI * 2 / _cell_cnt * i - Math.PI / 2;
+            x = _kyu_radius * Math.cos(angle) + _center_x;
+            y = _kyu_radius * Math.sin(angle) + _center_y;
+            dx = x - _center_x;
+            dy = y - _center_y;
+            angle = Math.atan2(dy, dx);
+            rotation = ( angle - Math.PI / 2 ) * 180 / Math.PI;
+            _kyu_def_posi.push(new Array(x-cell.x, y-cell.y, x, y, rotation));
+            var cell = new Cell(x-cell.x, y-cell.y + 300, _cell_w, _cell_h * 200);
+            //セル配置
+            stage.addChild(cell.cell);
+            _cell_list.push(cell);
+        }
+      }
+        setCell();
+        var hue = 0.0;
+        createjs.Ticker.addEventListener("tick", tick);
+          function tick() {
+            stage.update();
+            hue += 4.0;
+            for (var i = 0; i < _cell_cnt; i++ ) {
+              var c = _cell_list[i];
+              _cell_list[i].cell.graphics.clear().beginFill("hsl(" + hue * 4 + ", 100%, 50%)");
+              _cell_list[i].cell.graphics.drawRect(c.x, c.y, c.w, c.h);
+            }
+            _t ++;
+          }
+      }
+
+      class Cell {
+        constructor(x, y, w, h) {
+          this.x = x;
+          this.y = y;
+          this._x = 0;
+          this._y = 0;
+          this.w = w;
+          this.h = h;
+          this._v_x = 0;
+          this._v_y = 0;
+          this._w = 0;
+          this._h = 0;
+          this._rotaion = 0;
+          this._color = 0;
+          this._a = 0.0;
+          this._vx = 0.0;
+          this.cell = new createjs.Shape();
+          this.cell.graphics.beginFill("white"); 
+          this.cell.graphics.drawRect(this.x, this.y, this.w, this.h);
+        }
+      }
+    </script>
+  </head>
+  <body>
+   <canvas id="myCanvas" width="940" height="940" style="background:black;"></canvas>
+  </body>
+</html>
