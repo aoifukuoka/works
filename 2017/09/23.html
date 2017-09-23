@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+    <script>
+      var _cell_list = [];
+      var _kyu_def_posi = [];
+      var num_shape = 4;
+      var crt_rot = 0;
+      var ar_shape = [];
+      var h = 100;
+      
+      window.addEventListener("load", init);
+      function init() {
+        createjs.Ticker.setFPS(6000);
+        var stage = new createjs.Stage("myCanvas");
+        function rotate() {
+          var k = Math.sqrt(Math.pow((stage.mouseX - stage.canvas.width / 2), 2) + Math.pow((stage.mouseY - stage.canvas.height / 2), 2));
+          for(var i = 0; i < num_shape; i++) {
+              var rot = 2 * Math.PI * i / num_shape;
+              rot += crt_rot * (Math.PI / 180);
+              ar_shape[i].x = k * Math.cos(rot) + stage.canvas.width / 2;
+              ar_shape[i].y = k * Math.sin(rot) + stage.canvas.height / 2;
+              ar_shape[i].graphics.clear().beginFill("hsl(" + hue * 4 + ", 100%, 50%)");
+              ar_shape[i].graphics.drawCircle(0, 0, 10);
+          }
+          crt_rot++;
+        }
+        function draw() {
+          
+              for(var i = 1; i <= num_shape; i++) {
+                  var shape = new createjs.Shape();
+                  var g = shape.graphics;
+                  g.beginFill("hsl(" + hue * 4 + ", 100%, 50%)");
+                  g.drawCircle(0, 0, 10);
+                  g.endFill();
+                  var rot = 2 * Math.PI * i / num_shape;
+                  shape.x = h * Math.cos(rot) + stage.canvas.width / 2;
+                  shape.y = h * Math.sin(rot) + stage.canvas.height / 2;
+                  console.log(rot);
+                  stage.addChild(shape);
+                  ar_shape.push(shape);
+              }
+              stage.update();
+          }
+        var angle = 0.0;
+        draw();
+        var hue = 0.0;
+        createjs.Ticker.addEventListener("tick", tick);
+          function tick() {
+            rotate();
+            hue += 4.0;
+            angle += 0.1;
+            stage.update();
+          }
+      }
+    </script>
+  </head>
+  <body>
+   <canvas id="myCanvas" width="940" height="940" style="background:black;"></canvas>
+  </body>
+</html>
