@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+    <script>
+      var _cell_list = [];
+      var _kyu_def_posi = [];
+      var num_shape = 800;
+          var crt_rot = 0;
+          var ar_shape = [];
+          var h = 100;
+          const AROUND_NAMI_A = 0.2;
+          const AROUND_NAMI_POSI = 0.3;
+      
+      window.addEventListener("load", init);
+      function init() {
+        createjs.Ticker.setFPS(60);
+        var stage = new createjs.Stage("myCanvas");
+        stage.canvas.width = window.innerWidth;
+        stage.canvas.height = window.innerHeight;
+        function rotate() {
+          var k = 300;
+          for(var i = 0; i < num_shape; i++) {
+              var dx = ar_shape[i].x - _kyu_def_posi[i][2];
+              var dy = ar_shape[i].y - _kyu_def_posi[i][3];
+              var dist = Math.sqrt( dx * dx + dy * dy );
+                  
+              if ( Math.abs(ar_shape[i]._a) <= AROUND_NAMI_A && dist <= AROUND_NAMI_POSI) {
+                  ar_shape[i].x = _kyu_def_posi[i][2];
+                  ar_shape[i].y = _kyu_def_posi[i][3];
+                  ar_shape[i]._a = 0;
+              }
+              checkWave(i, stage.mouseX, stage.mouseY);
+          }
+          crt_rot++;
+        }
+        function draw() {
+          
+              for(var i = 1; i <= num_shape; i++) {
+                  var shape = new createjs.Shape();
+                  var g = shape.graphics;
+                  g.beginFill("white");
+                  g.drawRect(0, 0,17 ,17);
+                  g.endFill();
+                  var rot = 2 * Math.PI * i / num_shape;
+                  shape.x = h * Math.cos(rot) + window.innerWidth / 2;
+                  shape.y = h * Math.sin(rot) + window.innerHeight / 2;
+                  shape._a = 0;
+                  console.log(rot);
+                  stage.addChild(shape);
+                  ar_shape.push(shape);
+
+                  _kyu_def_posi.push([100,100,h * Math.cos(rot) + window.innerWidth / 2, h * Math.sin(rot) + window.innerHeight / 2]);
+              }
+              stage.update();
+          }
+          function checkWave(i, mouseX, mouseY) {
+            var dx = ar_shape[i].x - mouseX;
+            var dy = ar_shape[i].y - mouseY;
+            var dist = Math.sqrt( dx * dx + dy * dy );
+
+            if (dist < 70) {
+                addWave(i);
+            }
+          }
+
+          function addWave(i) {
+            ar_shape[i].y += 10;
+          }
+        var angle = 0.0;
+        draw();
+        createjs.Ticker.addEventListener("tick", tick);
+          function tick() {
+            rotate();
+            angle += 0.1;
+            stage.update();
+          }
+      }
+    </script>
+  </head>
+  <body>
+   <canvas id="myCanvas" width="940" height="940" style="background:black;"></canvas>
+  </body>
+</html>
