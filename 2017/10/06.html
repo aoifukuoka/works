@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+    <script>
+      var _kyu_def_posi = [];
+      var ar_shape = [];
+
+      const h = 160;
+      const num_shape = Math.ceil(2 * Math.PI * h);
+      const AROUND_NAMI_A = 0.2;
+      const AROUND_NAMI_POSI = 0.3;
+      const _cell_amout = 1;
+      
+      window.addEventListener("load", init);
+      function init() {
+        createjs.Ticker.setFPS(60);
+        var stage = new createjs.Stage("myCanvas");
+        stage.canvas.width = window.innerWidth;
+        stage.canvas.height = window.innerHeight;
+
+        var num_music = 1;
+        var music = new createjs.Shape();
+        stage.addChild(music);
+        var mscAngle = 0.0;
+        function rotateMusic() {
+          // var k = Math.sqrt(Math.pow((stage.mouseX - stage.canvas.width / 2), 2) + Math.pow((stage.mouseY - stage.canvas.height / 2), 2));
+          var rot = 2 * Math.PI * 0 / num_shape;
+          rot += mscAngle* (Math.PI / 180);
+          music.x = 170 * Math.cos(rot) + stage.canvas.width / 2;
+          music.y = 170 * Math.sin(rot) + stage.canvas.height / 2;
+          mscAngle += 10;
+        }
+
+        function drawMusic() {
+          var g = music.graphics;
+          g.beginFill("black");
+          g.drawCircle(0, 0, 10);
+          g.endFill();
+          var rot = 0;
+          music.x = h * Math.cos(rot) + stage.canvas.width / 2;
+          music.y = h * Math.sin(rot) + stage.canvas.height / 2;
+          stage.addChild(music);
+          stage.update();
+        }
+
+        function draw() {
+          for(var i = 1; i <= num_shape; i++) {
+            var shape = new createjs.Shape();
+            var g = shape.graphics;
+            g.beginFill("black");
+            g.drawCircle(0, 0, 5);
+            g.endFill();
+            var rot  = Math.PI * 2 / num_shape * i - Math.PI / 2;
+            shape.x = h * Math.cos(rot) + window.innerWidth / 2;
+            shape.y = h * Math.sin(rot) + window.innerHeight / 2;
+            shape._a = 0;
+            shape._v_x = 0;
+            shape._v_y = 0;
+            shape._vx = 0;
+            var x = h * Math.cos(rot) + window.innerWidth / 2;
+            var y = h * Math.sin(rot) + window.innerHeight / 2;
+            
+            dx = x - window.innerWidth / 2;
+            dy = y - window.innerHeight / 2;
+            angle = Math.atan2(dy, dx);
+            var rotation =  ( angle - Math.PI / 2 ) * 180 / Math.PI;
+            
+            shape._x = i * _cell_amout;
+            shape._y = window.innerHeight / 2;
+            stage.addChild(shape);
+            ar_shape.push(shape);
+            _kyu_def_posi.push([x -shape._x, y -shape._y,x, y, rotation]);
+          }
+          stage.update();
+        }
+        
+        function rotate() {
+          for(var i = 0; i < num_shape; i++) {
+            var dx = ar_shape[i].x - _kyu_def_posi[i][2];
+            var dy = ar_shape[i].y - _kyu_def_posi[i][3];
+            var dist = Math.sqrt( dx * dx + dy * dy );
+            
+            if ( Math.abs(ar_shape[i]._a) <= AROUND_NAMI_A && dist <= AROUND_NAMI_POSI) {
+              //丸め処理
+              ar_shape[i].x = _kyu_def_posi[i][2];
+              ar_shape[i].y = _kyu_def_posi[i][3];
+              ar_shape[i]._a = 0;
+            } else {
+              var  _period = 2;
+              var _cell_amout = 1;
+              var _f = 3.0;
+              y = ar_shape[i]._a * Math.sin( _t / _period - i * _cell_amout / _f );
+              
+              angle = _kyu_def_posi[i][4] * Math.PI / 180 - Math.PI / 2;
+              x = Math.cos(angle) * y;
+              y = Math.sin(angle) * y;
+                  
+              y += window.innerHeight / 2;
+              ar_shape[i]._v_x = ar_shape[i]._x + x;
+              ar_shape[i]._v_y = y; //描画
+              
+              //加速度をばねる
+              springA(ar_shape[i]); //振幅を変化
+              
+              //一時変換
+              ar_shape[i].x = ar_shape[i]._v_x + _kyu_def_posi[i][0];
+              ar_shape[i].y = ar_shape[i]._v_y + _kyu_def_posi[i][1];
+              var g = ar_shape[i].graphics;
+                  g.clear().beginFill("hsl(" + hue * 4 + ", 100%, 50%)");
+                  // g.clear().beginFill("white");
+                  g.drawCircle(0, 0 , 5)
+                  g.endFill();
+            }
+            checkWave(i, stage.mouseX, stage.mouseY);
+            checkWave(i, music.x, music.y);
+          }
+        }
+        
+        function springA( p_cell ) {
+          var dx; 
+          var ax;
+          var _a_min = 0.0;
+          var _nami_spring = 0.01; //ばね
+          var _nami_friction = 0.8; //跳ね
+          dx = _a_min - p_cell._a;
+          ax = dx * _nami_spring;
+          p_cell._vx += ax;
+          p_cell._vx *= _nami_friction;
+          p_cell._a += p_cell._vx;
+        }
+        
+        function checkWave(i, mouseX, mouseY) {
+          var dx = ar_shape[i].x - mouseX;
+          var dy = ar_shape[i].y - mouseY;
+          var dist = Math.sqrt( dx * dx + dy * dy );
+          // addWave(i);
+          if (dist < 20) {
+            addWave(i);
+          }
+        }
+        
+        function addWave(p_i) {
+          var y;
+          var start_i = p_i - 100; 
+          if (start_i < 0) { start_i = 0; }
+          var end_i =  p_i + 100;
+          if (end_i > num_shape) { end_i = num_shape; }
+          var dist;
+          for (var i = start_i; i < end_i; i++) {
+            dist = Math.abs((p_i - i)); 
+            if (dist == 0) { dist = 1.0; }
+            var up_rate = 3.0;
+            y = 1 / dist * up_rate;
+            ar_shape[i]._a += y;
+          }
+        }
+        
+        var _t = 0.0;
+        draw();
+        drawMusic();
+        var hue = 0.0;
+        createjs.Ticker.addEventListener("tick", tick);
+          function tick() {
+            rotate();
+            rotateMusic();
+            // rotateMusic();
+            _t ++;
+            hue += 400;
+            stage.update();
+          }
+      }
+    </script>
+  </head>
+  <body>
+   <canvas id="myCanvas" width="940" height="940" style="background:black;"></canvas>
+  </body>
+</html>
