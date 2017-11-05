@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+     <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+     
+  </head>
+  <body>
+  <canvas id="myCanvas" width="1299" height="960"></canvas>
+  <script>
+    window.addEventListener("load", init);
+    var mx=-1;
+  var my=-1;
+  var stage = new createjs.Stage("myCanvas");
+      function canv_mousemove(evt)
+        {
+          mx=evt.clientX-stage.canvas.offsetLeft;
+          my=evt.clientY-stage.canvas.offsetTop;
+        }
+    function init() {
+      var stage = new createjs.Stage("myCanvas");
+      /*
+      1. テキストを描く
+      2. テキストを含む座標を取得する
+      3. そこにdotを入れていく
+      4. アニメーションを加える(別途掘り下げる)
+      */
+      
+
+      var workflow = {
+        init: function() {
+          this.setVars();
+          this.drawText();
+          this.getPositions();
+          this.setParticles();
+          this.draw();
+          
+
+        },
+        randRange: function (min, max) {
+          return Math.floor(Math.random() * (max - min + 1) + min);
+        },
+        setVars: function() {
+          this.context = stage.canvas.getContext('2d');
+          this.particles = [];
+        },
+        drawText: function() {
+          var text = new createjs.Text("あ", "130px '-apple-system,BlinkMacSystemFont'", "white");
+          text.x = 600;
+          text.y = 480;
+          stage.addChild(text);
+          stage.update();
+        },
+        getPositions: function() {
+          this.imageData = this.context.getImageData(0, 0, stage.canvas.width, stage.canvas.height);
+          // console.log( stage.canvas.width);
+          this.canvasMap = this.imageData.data;
+          // console.log(this.canvasMap)
+        },
+        setParticles: function() {
+          for(let i = 0, iz = stage.canvas.width - 1; i < iz; i += 1){
+            for(let j = 0, jz = stage.canvas.height -1; j < jz; j += 1){
+              let threshold = this.canvasMap[((i + j * stage.canvas.width) * 4) + 3];
+              if(threshold  === 0){
+                  continue;
+              }
+              this.particles.push(this.particle());
+              this.particles[this.particles.length-1].defaultX = i;
+              this.particles[this.particles.length-1].defaultY = j;
+            }
+          }
+        },
+        draw: function() {
+          for(var i = 0; i < this.particles.length; i++) {
+            var p = this.particles[i];
+            var g = p.shape.graphics;
+            g.beginFill('rgba('+p.r+','+p.g+','+p.b+',1)');
+            g.beginFill('black');
+            g.drawCircle(p.x, p.y, p.diameter);
+            g.endFill();
+            stage.addChild(p.shape);
+          }
+        },
+        particle: function() {
+          return {
+            x: this.randRange(10, stage.canvas.width),
+            y: this.randRange(10, stage.canvas.height),
+            defaultX: 0,
+            defaultY: 0,
+            xVelocity: Math.random()*10-5,
+            yVelocity: Math.random()*10-5,
+            diameter: 1,
+            r:Math.floor(Math.random()*255),
+            g:Math.floor(Math.random()*255),
+            b:Math.floor(Math.random()*255),
+            a:1,
+            shape: new createjs.Shape(),
+          }
+        },
+        animate: function() {
+          for(i = 0, n = this.particles.length; i < n; i++) {
+            var p =  this.particles[i];
+            var homeDX=p.defaultX-p.x;
+            var homeDY=p.defaultY-p.y;
+            var homeDistance=Math.sqrt(Math.pow(homeDX,2) + Math.pow(homeDY,2)) * 10;
+            var homeForce=homeDistance*0.01;
+            var homeAngle=Math.atan2(homeDY,homeDX);
+
+            // console.log("dis");
+            // console.log(homeDistance);
+            // console.log("ang");
+            // console.log(homeAngle);
+            
+            var cursorForce=0;
+            var cursorAngle=0;
+            
+            if(stage.mouseX >= 0)
+            {
+              var cursorDX=p.x-stage.mouseX;
+              var cursorDY=p.y-stage.mouseY;
+              var cursorDistanceSquared=Math.pow(cursorDX,2) + Math.pow(cursorDY,2);
+              cursorForce=Math.min(10000/cursorDistanceSquared,10000);
+              cursorAngle=Math.atan2(cursorDY,cursorDX);
+            }
+            else
+            {
+              cursorForce=0;
+              cursorAngle=0;
+            }
+            
+            p.xVelocity+=homeForce*Math.cos(homeAngle) + cursorForce*Math.cos(cursorAngle);
+            p.yVelocity+=homeForce*Math.sin(homeAngle) + cursorForce*Math.sin(cursorAngle);
+            
+            p.xVelocity*=0.92;
+            p.yVelocity*=0.92;
+            
+            p.x+=p.xVelocity;
+
+            p.y+=p.yVelocity;
+            // console.log(this.x);
+
+           
+            var g = p.shape.graphics;
+            g.clear().beginFill('black');
+            g.drawCircle(p.x, p.y, p.diameter);
+            g.endFill();
+          }
+        }
+      }
+
+      var wf = workflow;
+      wf.init();
+      
+      createjs.Ticker.addEventListener("tick", handleTick);
+      function handleTick() {
+        wf.animate();
+        stage.update();
+      }
+    }
+
+    
+   </script>
+  </body>
+</html>
